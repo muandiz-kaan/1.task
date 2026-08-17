@@ -28,12 +28,27 @@ export default function ProductsPage() {
     loadProducts();
   }, []);
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: "TRY",
+    }).format(price);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("tr-TR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Title Header */}
       <div className="flex items-center justify-between border-b border-gray-250 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-950">Ürün Listesi</h1>
+          <h1 className="text-xl font-bold text-gray-950">Ürün Kataloğu</h1>
         </div>
         <Link
           href="/ekle"
@@ -50,11 +65,11 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Loading */}
+      {/* Loading (Grid Skeleton) */}
       {loading && (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="animate-pulse h-12 rounded border border-gray-200 bg-white"></div>
+            <div key={i} className="animate-pulse aspect-square rounded-lg border border-gray-200 bg-white"></div>
           ))}
         </div>
       )}
@@ -66,14 +81,50 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Simplified Products List (Only Titles) */}
+      {/* Products Grid (Square Cards with Details) */}
       {!loading && !error && products.length > 0 && (
-        <div className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-sm">
-          {products.map((product) => (
-            <div key={product.id} className="p-4 flex items-center justify-between">
-              <span className="font-semibold text-gray-900">{product.name}</span>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+          {products.map((product) => {
+            const isOutOfStock = product.stock <= 0;
+
+            return (
+              <div
+                key={product.id}
+                className="flex flex-col justify-between rounded-lg border border-gray-200 bg-white p-5 hover:shadow-sm transition-shadow aspect-square"
+              >
+                {/* Top Section */}
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="font-bold text-gray-950 line-clamp-1" title={product.name}>
+                      {product.name}
+                    </h2>
+                    <span
+                      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold border ${
+                        isOutOfStock
+                          ? "border-red-200 bg-red-50 text-red-700"
+                          : "border-green-200 bg-green-50 text-green-700"
+                      }`}
+                    >
+                      {isOutOfStock ? "Tükendi" : `Stok: ${product.stock}`}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 line-clamp-4 leading-relaxed">
+                    {product.description || "Açıklama belirtilmemiş."}
+                  </p>
+                </div>
+
+                {/* Bottom Section */}
+                <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
+                  <span className="text-base font-bold text-gray-900">
+                    {formatPrice(product.price)}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {formatDate(product.createdDate)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
